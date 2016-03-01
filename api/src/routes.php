@@ -1,51 +1,33 @@
 <?php
 // Routes
 
-$app->get('/[{name}]', function ($request, $response, $args) {
-    // Sample log message
-    $this->logger->info("'/' route");
+$app->get('/links/[{id}]', function ($request, $response, $args) {
     
-    // create test table record
-    if (isset($args['name']))
-    {
-        $book = $this->redbean->dispense( 'book' );
-        $book->name = $args['name'];
-        $id = $this->redbean->store( $book );
-        $args['id'] = $id;
-    }
-
-    // Render index view
-    return $this->renderer->render($response, 'index.phtml', $args);
-});
-
-
-$app->get('/books/[{id}]', function ($request, $response, $args) {
+    $this->logger->info("'/links/' route");
     
-    $this->logger->info("'/books/' route");
-    
-    // retrieve all books or selected id
+    // retrieve all links or selected id
     if (isset($args['id']))
     {
-        $books = $this->redbean->findAll( 'book' );
-        $books = $this->redbean->load( 'book', $args['id'] );
+        $items = $this->redbean->findAll( 'linkame_link' );
+        $items = $this->redbean->load( 'linkame_link', $args['id'] );
     }
     else
     {
-        $books = $this->redbean->findAll( 'book' );
+        $items = $this->redbean->findAll( 'linkame_link' );
     }
 
     // Return results
-    return $response->withJson($books);
+    return $response->withJson($items);
 });
 
-$app->post('/books/', function ($request, $response, $args) {
+$app->post('/link/', function ($request, $response, $args) {
     
-    $this->logger->info("'/books/' post route");
+    $this->logger->info("'/link/' post route");
     
-    $book = $this->redbean->dispense( 'book' );
-    $book->import( $request->getParsedBody() );
-    $this->redbean->store( $book );
+    $item = $this->redbean->dispense( 'linkame_link' );
+    $item->import( $request->getParsedBody() );
+    $this->redbean->store( $item );
 
-    // Return results
-    return $response->withJson($book)->withStatus(201);
+    // Return result
+    return $response->withJson($item)->withStatus(201);
 });
