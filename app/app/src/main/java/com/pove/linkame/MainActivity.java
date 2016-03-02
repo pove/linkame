@@ -23,12 +23,6 @@ public class MainActivity extends AppCompatActivity {
         String action = intent.getAction();
         String type = intent.getType();
 
-        if (Intent.ACTION_SEND.equals(action) && type != null) {
-            if ("text/plain".equals(type)) {
-                handleSendText(intent); // Handle text being sent
-            }
-        }
-
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -41,6 +35,13 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        if (Intent.ACTION_SEND.equals(action) && type != null) {
+            if ("text/plain".equals(type)) {
+                TextView tInfo = (TextView) findViewById(R.id.tvInfo);
+                handleSendText(intent, tInfo); // Handle text being sent
+            }
+        }
     }
 
     @Override
@@ -65,13 +66,16 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    void handleSendText(Intent intent) {
+    void handleSendText(Intent intent, TextView t) {
         String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
         if (sharedText != null) {
             // Update UI to reflect text being shared
-            //TextView tv_info = (TextView)findViewById(R.id.tvInfo);
-            //tv_info.setText("aaaa");
+
             Log.i("Intent captured", sharedText);
+            //View content = getLayoutInflater().inflate(R.layout.content_main, null);
+            //TextView t = (TextView)content.findViewById(R.id.tvInfo);
+            Log.i("tvInfo", t.getText().toString());
+            t.setText(sharedText);
         }
     }
 }
