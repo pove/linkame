@@ -1,13 +1,16 @@
 <?php
 // Routes
 
-/*$app->get('/[{name}]', function ($request, $response, $args) {
+
+$app->get('/', function ($request, $response, $args) {
     // Sample log message
     $this->logger->info("'/' route");
 
+    $items = $this->redbean->findAll( 'linkamelink', ' ORDER BY id DESC ' );
+
     // Render index view
-    return $this->renderer->render($response, 'index.phtml', $args);
-});*/
+    return $this->renderer->render($response, 'index.phtml', ['links' => $this->redbean->exportAll($items)]);
+});
 
 $app->get('/links[/{id}]', function ($request, $response, $args) {
     
@@ -37,4 +40,16 @@ $app->post('/link', function ($request, $response, $args) {
 
     // Return result
     return $response->withJson($item)->withStatus(201);
+});
+
+$app->delete('/link/{id}', function ($request, $response, $args) {
+    
+    $this->logger->info("'/link/' delete route");
+
+    // Retrieve selected id
+    $item = $this->redbean->load( 'linkamelink', $args['id'] );
+    $this->redbean->trash( $item );
+
+    // Return result
+    return $response->withStatus(200);
 });

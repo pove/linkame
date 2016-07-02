@@ -1,37 +1,69 @@
 <html>
     <head>
         <meta charset="utf-8"/>
-        <title>Slim 3</title>
-        <link href='//fonts.googleapis.com/css?family=Lato:300' rel='stylesheet' type='text/css'>
+        <title>Linkame</title>
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,200,300" rel="stylesheet">
         <style>
             body {
-                margin: 50px 0 0 0;
+                margin: 20px 0;
                 padding: 0;
                 width: 100%;
-                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-family: 'Roboto', sans-serif;
                 text-align: center;
                 color: #aaa;
                 font-size: 18px;
             }
 
             h1 {
-                color: #719e40;
+                color: #1976D2;
                 letter-spacing: -3px;
-                font-family: 'Lato', sans-serif;
-                font-size: 100px;
-                font-weight: 200;
+                font-size: 6em;
+                font-weight: 100;
                 margin-bottom: 0;
+            }
+
+            h2 {
+                color: #5a5a5a;
+                letter-spacing: -3px;
+                font-size: 2em;
+                font-weight: 300;
+                margin-bottom: 0;
+            }
+
+            a {
+                text-decoration: none;
+                color: #1976D2;
+                font-weight: 400;
+            }
+            a:visited { 
+                color: #1976D2;
+            }
+            a:hover { 
+                color: #d219b1;
+            }
+            a>div{
+                padding: 0 5px;
+            }
+            a>div:hover{
+                background-color: #eaeaea;
             }
         </style>
     </head>
     <body>
-        <h1>Slim</h1>
-        <div>a microframework for PHP</div>
-
-        <?php if (isset($name)) : ?>
-            <h2>Hello <?= htmlspecialchars($name); ?>!</h2>
-        <?php else: ?>
-            <p>Try <a href="SlimFramework">/SlimFramework</a>
-        <?php endif; ?>
+        <h1>Linkame</h1>
+        <div>An easy, simple and useful link list</div>
+        <br/><br/>
+        <?php if (isset($links) && count($links) > 0) { 
+            foreach ($links as $clave=>$valor)
+                {
+                    echo '<a href="' . $valor["url"] . '">';
+                    echo "<div><h2>" . htmlspecialchars($valor["name"]) . "</h2>";
+                    echo "<span>" . htmlspecialchars($valor["url"]) . "</span>";
+                    echo '</div></a>';
+                }        
+        ?>            
+        <?php } else { ?>
+            <p>No links yet :(</a>
+        <?php } ?>
     </body>
 </html>
