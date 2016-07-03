@@ -1,6 +1,7 @@
 <html>
     <head>
         <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Linkame</title>
         <link href="https://fonts.googleapis.com/css?family=Roboto:100,200,300" rel="stylesheet">
         <style>
@@ -17,7 +18,7 @@
             h1 {
                 color: #1976D2;
                 letter-spacing: -3px;
-                font-size: 6em;
+                font-size: 5em;
                 font-weight: 100;
                 margin-bottom: 0;
             }
@@ -47,6 +48,14 @@
             a>div:hover{
                 background-color: #eaeaea;
             }
+            
+            .ellipses {
+                width: 100%;
+                display: block;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
         </style>
     </head>
     <body>
@@ -58,7 +67,7 @@
                 {
                     echo '<a href="' . $valor["url"] . '">';
                     echo "<div><h2>" . htmlspecialchars($valor["name"]) . "</h2>";
-                    echo "<span>" . htmlspecialchars($valor["url"]) . "</span>";
+                    echo '<span class="ellipses">' . htmlspecialchars($valor["url"]) . "</span>";
                     echo '</div></a>';
                 }        
         ?>            
