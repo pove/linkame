@@ -49,6 +49,7 @@
                 background-color: #eaeaea;
             }
             
+            /* Append ellipsis when text overflows its containing element: */
             .ellipses {
                 width: 100%;
                 display: block;
@@ -61,7 +62,7 @@
     <body>
         <h1>Linkame</h1>
         <div>An easy, simple and useful link list</div>
-        <br/><br/>
+        <br/>
         <?php if (isset($links) && count($links) > 0) { 
             foreach ($links as $clave=>$valor)
                 {
