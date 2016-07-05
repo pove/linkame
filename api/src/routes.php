@@ -3,13 +3,56 @@
 
 
 $app->get('/', function ($request, $response, $args) {
-    // Sample log message
+    // Home log message
     $this->logger->info("'/' route");
 
-    $items = $this->redbean->findAll( 'linkamelink', ' ORDER BY id DESC ' );
+    $device = '';
+    $usedevices = $this->get('settings')['security']['usedevices'];
+    // If we are using serveral devices setup, filter by key
+    if ($usedevices)
+    {
+        $key = '';
+        $item = null;
+        if (!isset($_COOKIE["device"]) || !isset($_COOKIE["key"]))
+        {
+            // If this device does not exist, create one            
+            $device = $this->security->getToken(5);
+            setcookie("device", $device, 2147483647); // The maximum so far to expire: 2^31 - 1 = 2147483647 = 2038-01-19 04:14:07
+
+            $key = $this->security->getToken(50);
+            setcookie("key", $this->security->encryption($key, $device), 2147483647); // The maximum so far to expire: 2^31 - 1 = 2147483647 = 2038-01-19 04:14:07
+        }
+        else {
+            // Retrieve device and key from cookies
+            $device = $_COOKIE["device"];
+            $key = $this->security->decryption($_COOKIE["key"], $device);
+
+            // Get this device record
+            $item = $this->redbean->findOne( 'linkamedevice', ' `key` = ? ', [ $key ] );
+        }
+
+        // Create new record for this device
+        if ($item === null)
+        {
+            $item = $this->redbean->dispense( 'linkamedevice' );
+            $item->key = $key;
+        }
+
+        // Update device IP
+        $ip = $request->getAttribute('ip_address');
+        $item->ip = $this->security->encryption($ip, $device);
+        $this->redbean->store( $item );
+        
+        // Retrieve this device links
+        $items = $this->redbean->find( 'linkamelink', ' `key` = ? ORDER BY id DESC ', [$key] );
+    }
+    else {
+        // For only one device setup, retrieve all
+        $items = $this->redbean->findAll( 'linkamelink', ' ORDER BY id DESC ' );
+    }
 
     // Render index view
-    return $this->renderer->render($response, 'index.phtml', ['links' => $this->redbean->exportAll($items)]);
+    return $this->renderer->render($response, 'index.phtml', ['links' => $this->redbean->exportAll($items), 'device' => $device]);
 });
 
 $app->get('/links[/{id}]', function ($request, $response, $args) {

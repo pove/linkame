@@ -35,3 +35,12 @@ $container['redbean'] = function ($c) {
     
     return $readbean;
 };
+
+// redbean
+$container['security'] = function ($c) { 
+    
+    $secsettings = $c->get('settings')['security'];
+    $security = new Security($secsettings);
+    
+    return $security;
+};

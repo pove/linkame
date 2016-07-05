@@ -25,5 +25,14 @@ require __DIR__ . '/../src/middleware.php';
 // Register routes
 require __DIR__ . '/../src/routes.php';
 
+// Register compatibility funtions
+require __DIR__ . '/../src/compatibility.php';
+
+// Register security class
+require __DIR__ . '/../src/security.php';
+
+// Register common funtions
+require __DIR__ . '/../src/functions.php';
+
 // Run app
 $app->run();

@@ -65,9 +65,20 @@
                 white-space: nowrap;
                 text-overflow: ellipsis;
             }
+
+            header { 
+                position: absolute;
+                right: 0;
+                top: 0;
+                padding: 1rem;
+            }
         </style>
     </head>
-    <body>
+    <body>    
+        <?php if ($device !== '') : ?>
+            <header> <?php echo "Device: $device"; ?> </header>
+         <?php endif; ?>
+
         <h1><a href="/">Linkame</a></h1>
         <div>An easy, simple and useful link list</div>
         <br/>
