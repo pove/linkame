@@ -28,7 +28,7 @@ class Security {
 
     function aKeyFromDevice($device)
     {
-        return $device + substr($this->settings['akey'], 10);
+        return $device . substr($this->settings['akey'], 10);
     }
 
     function encryption($data, $device)
