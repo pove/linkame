@@ -37,8 +37,8 @@ if(!function_exists('random_bytes'))
 
     function random_bytes_compat($length) {
         $token = "";
-        $codeAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        $codeAlphabet.= "0123456789";
+        $codeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+        $codeAlphabet.= "123456789";
         $max = strlen($codeAlphabet) - 1;
         for ($i=0; $i < $length; $i++) {
             $token .= $codeAlphabet[crypto_rand_secure(0, $max)];
