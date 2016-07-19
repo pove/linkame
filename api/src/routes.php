@@ -17,10 +17,10 @@ $app->get('/', function ($request, $response, $args) {
         {
             // If this device does not exist, create one            
             $deviceid = $this->security->getToken(5);
-            setcookie("device", $deviceid, 2147483647); // The maximum so far to expire: 2^31 - 1 = 2147483647 = 2038-01-19 04:14:07
+            setcookie("device", $deviceid, 2147483647, '/'); // The maximum so far to expire: 2^31 - 1 = 2147483647 = 2038-01-19 04:14:07
 
             $key = $this->security->getToken(50);
-            setcookie("key", $this->security->encryption($key, $deviceid), 2147483647); // The maximum so far to expire: 2^31 - 1 = 2147483647 = 2038-01-19 04:14:07
+            setcookie("key", $this->security->encryption($key, $deviceid), 2147483647, '/'); // The maximum so far to expire: 2^31 - 1 = 2147483647 = 2038-01-19 04:14:07
         }
         else {
             // Retrieve device and key from cookies
@@ -41,18 +41,28 @@ $app->get('/', function ($request, $response, $args) {
         // Update device IP
         $ip = $request->getAttribute('ip_address');
         $item->ip = $this->security->encryption($ip, $deviceid);
+        $item->ipupdated = $this->redbean->isoDateTime();
         $this->redbean->store( $item );
         
         // Retrieve this device links
         $items = $this->redbean->find( 'linkamelink', ' `key` = ? ORDER BY id DESC ', [$key] );
+        $itemsresult = $this->redbean->exportAll($items);
+        
+        // Decrypt links
+        for ($i=0; $i < count($itemsresult); $i++) {            
+            $itemsresult[$i]['name'] = $this->security->decryption($itemsresult[$i]['name'], $deviceid);
+            $itemsresult[$i]['url'] = $this->security->decryption($itemsresult[$i]['url'], $deviceid);
+            unset($itemsresult[$i]['key']);
+        }
     }
     else {
         // For only one device setup, retrieve all
         $items = $this->redbean->findAll( 'linkamelink', ' ORDER BY id DESC ' );
+        $itemsresult = $this->redbean->exportAll($items);
     }
 
     // Render index view
-    return $this->renderer->render($response, 'index.phtml', ['links' => $this->redbean->exportAll($items), 'device' => $deviceid]);
+    return $this->renderer->render($response, 'index.phtml', ['links' => $itemsresult, 'device' => $deviceid]);
 });
 
 $app->get('/device/{deviceid}', function ($request, $response, $args) {
@@ -63,11 +73,13 @@ $app->get('/device/{deviceid}', function ($request, $response, $args) {
 
     // Retrieve mobile ip
     $ip = $request->getAttribute('ip_address');
-    //$ipcrypt = $this->security->encryption($ip, $deviceid);
+    //HACK: to test in localhost
+    //$ip = '192.168.0.X';
 
     // Look for this device
     $devices = $this->redbean->findAll( 'linkamedevice', ' ORDER BY id DESC ' );
 
+    // Check if they are on the same ip
     foreach ($devices as $device)
     {
         if ($this->security->decryption($device->ip, $deviceid) === $ip)
@@ -83,48 +95,104 @@ $app->get('/device/{deviceid}', function ($request, $response, $args) {
     }
 
     // Return result
-    //return $response->withBody($key)->withStatus(302);
-    return $response->withHeader('Content-Type', 'text/plain')->write($key)->withStatus(302);
+    return $response->withHeader('Content-Type', 'text/plain')->write($key)->withStatus(200);
 });
 
-$app->get('/links[/{id}]', function ($request, $response, $args) {
+$app->get('/links[/{device}]', function ($request, $response, $args) {
     
     $this->logger->info("'/links/' route");
     
-    // retrieve all links or selected id
-    if (isset($args['id']))
+    $usedevices = $this->get('settings')['security']['usedevices'];
+    // If we are using serveral devices setup, filter by key
+    if ($usedevices)
     {
-        $items = $this->redbean->load( 'linkamelink', $args['id'] );
+        // Retrieve links from key
+        if (isset($args['device']) && isset($request->getQueryParams()['key']))
+        {
+            $key = $this->security->decryption($request->getQueryParams()['key'], $args['device']);
+            $items = $this->redbean->find( 'linkamelink', ' `key` = ? ORDER BY id DESC ', [$key] );
+            
+            $itemsresult = $this->redbean->exportAll($items);
+            
+            // Decrypt links
+            for ($i=0; $i < count($itemsresult); $i++) {            
+                $itemsresult[$i]['name'] = $this->security->decryption($itemsresult[$i]['name'], $args['device']);
+                $itemsresult[$i]['url'] = $this->security->decryption($itemsresult[$i]['url'], $args['device']);
+                unset($itemsresult[$i]['key']);
+            }
+        }
     }
     else
     {
-        $items = $this->redbean->findAll( 'linkamelink' );
+         // Retrieve all links
+        $items = $this->redbean->find( 'linkamelink', ' `key` IS NULL ORDER BY id DESC ' );
+        $itemsresult = $this->redbean->exportAll($items);
     }
 
+    // If no links found
+    //if (!isset($itemsresult) || $itemsresult === null || count($itemsresult) == 0)
+    //    return $response->withStatus(404);
+
     // Return results
-    return $response->withJson($items);
+    return $response->withJson($itemsresult);
 });
 
-$app->post('/link', function ($request, $response, $args) {
+$app->post('/link[/{device}]', function ($request, $response, $args) {
     
     $this->logger->info("'/link/' post route");
     
     $item = $this->redbean->dispense( 'linkamelink' );
     $item->import( $request->getParsedBody() );
+
+    $usedevices = $this->get('settings')['security']['usedevices'];
+    // If we are using serveral devices setup, encrypt
+    if ($usedevices)
+    {
+        // Set key if we have it
+        if (isset($args['device']) && isset($request->getQueryParams()['key']))
+        {
+            $item->name = $this->security->encryption($item->name, $args['device']);
+            $item->url = $this->security->encryption($item->url, $args['device']);
+            $item->key = $this->security->decryption($request->getQueryParams()['key'], $args['device']);
+        }
+    }
+
     $this->redbean->store( $item );
 
     // Return result
     return $response->withJson($item)->withStatus(201);
 });
 
-$app->delete('/link/{id}', function ($request, $response, $args) {
+$app->delete('/link/{id}[/{device}]', function ($request, $response, $args) {
     
     $this->logger->info("'/link/' delete route");
 
-    // Retrieve selected id
-    $item = $this->redbean->load( 'linkamelink', $args['id'] );
-    $this->redbean->trash( $item );
+    $usedevices = $this->get('settings')['security']['usedevices'];
+    // If we are using serveral devices setup, get key to delete
+    if ($usedevices)
+    {
+        // Retrieve link from key
+        if (isset($args['device']) && isset($request->getQueryParams()['key']))
+        {
+            $key = $this->security->decryption($request->getQueryParams()['key'], $args['device']);
+            $item = $this->redbean->findone( 'linkamelink', ' id = ? AND `key` = ? ORDER BY id DESC ', [$args['id'], $key] );
+        }
+    }
+    else
+    {
+        // Retrieve selected id
+        $item = $this->redbean->load( 'linkamelink', $args['id'] );
+    }
 
-    // Return result
-    return $response->withStatus(200);
+    if (isset($item) && $item !== null)
+    {
+        $this->redbean->trash( $item );
+        // Return result
+        return $response->withStatus(200);
+    }
+    else
+    {        
+        // Return not found
+        return $response->withStatus(404);
+    }
 });

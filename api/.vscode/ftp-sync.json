@@ -1,0 +1,17 @@
+{
+    "remotePath": "/linkame",
+    "host": "pove.es",
+    "username": "u47491104-tst",
+    "password": "for.testing@2016",
+    "port": 22,
+    "protocol": "sftp",
+    "uploadOnSave": false,
+    "passive": true,
+    "debug": false,
+    "privateKeyPath": null,
+    "ignore": [
+        "\\.vscode",
+        "\\.git",
+        "\\src\\settings.php"
+    ]
+}
